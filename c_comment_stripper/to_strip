@@ -1,0 +1,109 @@
+#include <stddef.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+//define some global variables to make reading the code easier
+#define NOT_COMMENTED 0
+#define COMMENTED 1
+#define COMMENT_STARTED 2
+
+FILE* to_strip;
+FILE* output_file;
+int status;
+
+//handle the logic for when to strip and when not to strip comments from the file
+int check(char* to_parse, int status, size_t len){
+    char* substring;
+    if(status == NOT_COMMENTED){
+        substring = strstr(to_parse, ); 
+        if(substring != NULL) {
+            status = COMMENT_STARTED;
+            len = (size_t)(substring-to_parse); //calculate the offset for before the comment starts 
+            goto write;
+        }
+        substring = strstr(to_parse, );
+        if(substring != NULL) {
+            len = (size_t)(substring-to_parse)+1;
+            memset(substring, '\n', 1);
+            goto write;
+        }
+    } else if(status == COMMENTED){
+        substring = strstr(to_parse, );
+        if(substring != NULL){
+            len = len-((size_t)(substring-to_parse)+2);
+            status = /*BITCHHHHHHHHH*/NOT_COMMENTED;
+            to_parse = substring+2;
+            //printf("bitch: %s; %ld\n", to_parse, len);
+            goto write;
+        } else {
+            return status;
+        }
+    }
+write:
+    //write(1, to_parse, len);
+    //puts("done");
+    fwrite(to_parse, 1, len, output_file);  //write the uncommented section to the output file 
+    return status;
+}
+
+/*
+ * this function parses the entire file and loads it into the checker function
+ * this is also a multiline comment
+ */
+void parse_loop(){
+    char* line_read = NULL;
+    size_t len;
+    ssize_t read_bytes;
+    uint filter_status = NOT_COMMENTED;
+
+    while((read_bytes = getline(&line_read, &len, to_strip)) != -1){
+        //printf("read line: %s\n", line_read);
+        filter_status = check(line_read, filter_status, read_bytes);
+        if(filter_status == COMMENT_STARTED) { //check for a comment at the end of the line just started
+            filter_status = COMMENTED;
+            filter_status = check(line_read, filter_status, read_bytes);
+        }
+        memset(line_read, 0, len);
+    }
+
+    if(line_read)
+        free(line_read);
+    return;
+}
+
+int main(int argc, char* argv[]){
+    char output_filename[0x20];
+
+    if(argc == 1){
+        puts("usage ./comment_stripper <FILENAME>");
+        status = 1;
+        goto exit;
+    }
+
+    to_strip = fopen(argv[1], "r");
+    if(to_strip == NULL) {
+        printf("[!] Error opening file %s\n",argv[1]);
+        status = 1;
+        goto exit;
+    }
+    printf("opened %s\n", argv[1]);
+
+    memset(output_filename,0,0x20); 
+    strncpy(output_filename,argv[1],0x1a);
+    strcat(output_filename, ".str"); /*comment on a single line*/
+    output_file = fopen(output_filename, "w");
+    printf("opened %s\n", output_filename);
+
+    parse_loop();
+
+    status = 0;
+exit:
+    if(output_file)
+        fclose(output_file);
+    if(to_strip)
+        fclose(to_strip);
+    return status;
+}
+

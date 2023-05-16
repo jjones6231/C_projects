@@ -63,7 +63,6 @@ int64_t parse_int64_from_command(char* start_ptr){
     temp_end = (temp+len)+1;
 
 convert:
-    printf("[?] temp: %s\n",temp);
     ret = strtoll(temp, &temp_end,10);
     if(temp_end[0] != '\x00'){
         print_error("failed to convert number to a long long");

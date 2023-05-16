@@ -29,6 +29,16 @@ void print_float_res(double res){
     return;
 }
 
+/*
+ * I wanted to practice parsing user input using different methods
+ * while a sprintf(&uint, "%d\n", command); could work, I wanted to practice with strstr and strtoll
+ * it is for the same reason that while reading the stdin input, I do not do any parsing there. 
+ * A much more effective way would be create 2 different strings to store the ints and loop until a space
+ * this does come with it's own limitations. 
+ * However, and you need to keep track of the count of bytes read to gaurd against a buffer overflow 
+ *
+ * TLDR: I wanted to learn more about strtoll and strstr
+ */
 int64_t parse_int64_from_command(char* start_ptr){
     char* end_ptr;
     char* temp;
@@ -96,11 +106,13 @@ void program_loop(){
         //break on exit
         if(strstr(command, "!exit")) return;
 
+        //parse the information and convert it into an integer
         num1 = parse_int64_from_command(command_current_location);
         operation = command_current_location[0];
         command_current_location = command_current_location + 2; //increment the ptr
         num2 = parse_int64_from_command(command_current_location);
 
+        //logic to decide which calculation to preform based on the input
         switch (operation) {
             case '+':
                 print_longlong_res(num1 + num2);
